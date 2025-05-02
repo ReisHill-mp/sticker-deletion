@@ -126,7 +126,6 @@ export default function App() {
                     </button>
                   )}
                   <button
-                    onClick={() => setOpen(false)}
                     className="text-xl font-bold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                   >
                     ×
