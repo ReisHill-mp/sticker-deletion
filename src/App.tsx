@@ -1,69 +1,26 @@
-import { useState, useRef } from "react";
-import { Dialog } from "@headlessui/react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash, Check } from "lucide-react";
-
-const SNAP_NAVY = "#0F1B4C";
-const SNAP_RED = "#FC4B4E";
-
-const INITIAL_STICKERS = [
-  "/img/sticker_01.png",
-  "/img/sticker_02.png",
-  "/img/sticker_03.png",
-  "/img/sticker_04.png",
-  "/img/sticker_05.png",
-  "/img/sticker_05-1.png",
-  "/img/sticker_06.png",
-  "/img/sticker_07.png",
-  "/img/sticker_08.png",
-  "/img/sticker_08-1.png",
-  "/img/sticker_09.png",
-];
-
-type DesignOption = 1 | 2;
-interface SpawnedSticker {
-  image: string;
-  id: number;
-  x: number;
-  y: number;
-}
+import { Trash } from "lucide-react";
+import { SNAP_NAVY, SNAP_RED } from "./constants";
+import { DesignOption } from "./types";
+import { useStickers } from "./hooks/useStickers";
+import { StickerGrid } from "./components/StickerGrid";
+import { DeleteConfirmationDialog } from "./components/DeleteConfirmationDialog";
 
 export default function App() {
   const [open] = useState(true);
   const [design, setDesign] = useState<DesignOption>(1);
-  const [stickers, setStickers] = useState(INITIAL_STICKERS);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
 
-  const [spawned, setSpawned] = useState<SpawnedSticker[]>([]);
-  const nextId = useRef(0);
-
-  /* Helpers */
-  const spawnSticker = (image: string) => {
-    const id = nextId.current++;
-    const x = Math.random() * 80 + 10;
-    const y = Math.random() * 70 + 10;
-    setSpawned((s) => [...s, { image, id, x, y }]);
-  };
+  const { stickers, spawned, spawnSticker, removeSticker, removeSelected } = useStickers();
 
   const switchDesign = (d: DesignOption) => {
     setDesign(d);
     setSelectMode(false);
     setSelected(new Set());
-  };
-
-  const removeSticker = (idx: number) => {
-    setStickers((prev) => prev.filter((_, i) => i !== idx));
-    setPendingDelete(null);
-  };
-
-  const removeSelected = () => {
-    setStickers((prev) => prev.filter((_, i) => !selected.has(i)));
-    setSelected(new Set());
-    setPendingBulkDelete(false);
-    setSelectMode(false);
   };
 
   const toggleSelect = (idx: number) => {
@@ -72,6 +29,13 @@ export default function App() {
       next.has(idx) ? next.delete(idx) : next.add(idx);
       return next;
     });
+  };
+
+  const handleRemoveSelected = () => {
+    removeSelected(selected);
+    setSelected(new Set());
+    setPendingBulkDelete(false);
+    setSelectMode(false);
   };
 
   return (
@@ -156,65 +120,15 @@ export default function App() {
               </div>
 
               {/* Sticker grid */}
-              <div className="grid flex-1 grid-cols-3 gap-4">
-                {stickers.map((image, idx) => {
-                  const isSelected = selected.has(idx);
-                  const handleClick = () => {
-                    if (design === 2 && selectMode) {
-                      toggleSelect(idx);
-                    } else {
-                      spawnSticker(image);
-                    }
-                  };
-                  return (
-                    <div key={idx} className="relative">
-                      {design === 2 && selectMode && (
-                        <button
-                          onClick={() => toggleSelect(idx)}
-                          className="absolute -top-2 -left-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 transition-colors"
-                          style={{
-                            borderColor: isSelected ? "#ef4444" : SNAP_NAVY,
-                            backgroundColor: isSelected ? "#ef4444" : "white",
-                            boxShadow: isSelected ? "0 0 0 2px #fee2e2" : undefined,
-                          }}
-                        >
-                          {isSelected && (
-                            <Check
-                              className="h-4 w-4"
-                              strokeWidth={3}
-                              color="white"
-                              fill="white"
-                            />
-                          )}
-                        </button>
-                      )}
-
-                      <button
-                        onClick={handleClick}
-                        className={`flex h-24 w-full items-center justify-center rounded-2xl bg-white shadow-sm transition-transform active:scale-95 ${
-                          selectMode && isSelected ? "ring-4 ring-red-200" : ""
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          className="h-20 w-20 rounded-xl object-contain"
-                          alt="Sticker"
-                        />
-                      </button>
-
-                      {design === 1 && (
-                        <button
-                          onClick={() => setPendingDelete(idx)}
-                          className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full p-1 text-white shadow-md hover:brightness-95"
-                          style={{ backgroundColor: SNAP_RED }}
-                        >
-                          <Trash className="h-6 w-6" strokeWidth={2.5} />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <StickerGrid
+                stickers={stickers}
+                design={design}
+                selectMode={selectMode}
+                selected={selected}
+                onToggleSelect={toggleSelect}
+                onSpawnSticker={spawnSticker}
+                onDeleteSticker={setPendingDelete}
+              />
 
               {/* Bulk delete CTA */}
               {design === 2 && selectMode && (
@@ -235,55 +149,21 @@ export default function App() {
       </AnimatePresence>
 
       {/* Confirmation dialogs */}
-      <Dialog open={pendingDelete !== null} onClose={() => setPendingDelete(null)} className="relative z-50">
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
-          <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <Dialog.Title className="mb-4 text-base font-medium text-zinc-800">
-              Once this sticker is deleted it can't be retrieved.
-            </Dialog.Title>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setPendingDelete(null)}
-                className="rounded-md px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => pendingDelete !== null && removeSticker(pendingDelete)}
-                className="rounded-md px-3 py-1 text-sm font-medium text-white hover:brightness-95"
-                style={{ backgroundColor: SNAP_RED }}
-              >
-                Delete sticker
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+      <DeleteConfirmationDialog
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => pendingDelete !== null && removeSticker(pendingDelete)}
+        title="Once this sticker is deleted it can't be retrieved."
+        confirmText="Delete sticker"
+      />
 
-      <Dialog open={pendingBulkDelete} onClose={() => setPendingBulkDelete(false)} className="relative z-50">
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
-          <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <Dialog.Title className="mb-4 text-base font-medium text-zinc-800">
-              Once these {selected.size} stickers are deleted they can't be retrieved.
-            </Dialog.Title>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setPendingBulkDelete(false)}
-                className="rounded-md px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={removeSelected}
-                className="rounded-md px-3 py-1 text-sm font-medium text-white hover:brightness-95"
-                style={{ backgroundColor: SNAP_RED }}
-              >
-                Delete {selected.size} sticker{selected.size !== 1 && "s"}
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+      <DeleteConfirmationDialog
+        isOpen={pendingBulkDelete}
+        onClose={() => setPendingBulkDelete(false)}
+        onConfirm={handleRemoveSelected}
+        title={`Once these ${selected.size} stickers are deleted they can't be retrieved.`}
+        confirmText={`Delete ${selected.size} sticker${selected.size !== 1 ? "s" : ""}`}
+      />
     </div>
   );
 }
