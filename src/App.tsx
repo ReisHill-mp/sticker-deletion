@@ -1,9 +1,8 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Dialog } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash, Check } from "lucide-react";
 
-const SNAP_YELLOW = "#FFFC00";
 const SNAP_NAVY = "#0F1B4C";
 const SNAP_RED = "#FC4B4E";
 
