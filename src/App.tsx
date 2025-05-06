@@ -80,7 +80,7 @@ export default function App() {
       {spawned.map(({ id, image, x, y }) => (
         <img
           key={id}
-          src={`/img/${image}`}
+          src={`img/${image}`}
           className="absolute h-20 w-20 rounded-xl shadow-md object-contain"
           style={{ left: `${x}vw`, top: `${y}vh` }}
           alt="Sticker"
@@ -196,7 +196,7 @@ export default function App() {
                         }`}
                       >
                         <img
-                          src={`/img/${image}`}
+                          src={`img/${image}`}
                           className="h-20 w-20 rounded-xl object-contain"
                           alt="Sticker"
                         />
