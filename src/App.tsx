@@ -7,17 +7,17 @@ const SNAP_NAVY = "#0F1B4C";
 const SNAP_RED = "#FC4B4E";
 
 const INITIAL_STICKERS = [
-  "sticker_01.png",
-  "sticker_02.png",
-  "sticker_03.png",
-  "sticker_04.png",
-  "sticker_05.png",
-  "sticker_05-1.png",
-  "sticker_06.png",
-  "sticker_07.png",
-  "sticker_08.png",
-  "sticker_08-1.png",
-  "sticker_09.png",
+  "/img/sticker_01.png",
+  "/img/sticker_02.png",
+  "/img/sticker_03.png",
+  "/img/sticker_04.png",
+  "/img/sticker_05.png",
+  "/img/sticker_05-1.png",
+  "/img/sticker_06.png",
+  "/img/sticker_07.png",
+  "/img/sticker_08.png",
+  "/img/sticker_08-1.png",
+  "/img/sticker_09.png",
 ];
 
 type DesignOption = 1 | 2;
@@ -80,7 +80,7 @@ export default function App() {
       {spawned.map(({ id, image, x, y }) => (
         <img
           key={id}
-          src={`/src/img/${image}`}
+          src={image}
           className="absolute h-20 w-20 rounded-xl shadow-md object-contain"
           style={{ left: `${x}vw`, top: `${y}vh` }}
           alt="Sticker"
@@ -196,7 +196,7 @@ export default function App() {
                         }`}
                       >
                         <img
-                          src={`/src/img/${image}`}
+                          src={image}
                           className="h-20 w-20 rounded-xl object-contain"
                           alt="Sticker"
                         />
